@@ -1,12 +1,11 @@
 package com.mrcruz.algalogapi.api.controller;
 
 import com.mrcruz.algalogapi.domain.model.Client;
-import com.mrcruz.algalogapi.domain.repository.ClientRepository;
+import com.mrcruz.algalogapi.domain.service.ClientService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -15,40 +14,33 @@ import java.util.List;
 @RequestMapping("/api/v1/clients")
 public class ClientController {
 
-    private ClientRepository clientRepository;
+    private ClientService clientService;
 
     @GetMapping
     public List<Client> listAll(){
-        return clientRepository.findAll();
+        return clientService.findAll();
     }
 
     @GetMapping("/{id}")
     public Client findClient(@PathVariable Long id){
-        return clientRepository.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException("Client not found"));
+        return clientService.findById(id);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Client createClient(@Valid @RequestBody Client client){
-        return clientRepository.save(client);
+        return clientService.save(client);
     }
 
     @PutMapping("/{id}")
     public Client updateClient(@PathVariable Long id, @Valid @RequestBody Client client){
-        if(!clientRepository.existsById(id)){
-            throw new EntityNotFoundException("Client not found");
-        }
-        client.setId(id);
-        return clientRepository.save(client);
+        return clientService.update(id, client);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClient(@PathVariable Long id){
-        if(!clientRepository.existsById(id)){
-            throw new EntityNotFoundException("Client not found");
-        }
-        clientRepository.deleteById(id);
+        clientService.delete(id);
     }
 
 }

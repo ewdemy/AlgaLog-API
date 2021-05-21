@@ -9,10 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.LocaleContextResolver;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +28,30 @@ import java.util.Locale;
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private MessageSource source;
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(BusinessException ex, WebRequest request){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        StandartError error = new StandartError();
+        error.setStatus(status.value());
+        error.setTitle(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+
+        return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request){
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        StandartError error = new StandartError();
+        error.setStatus(status.value());
+        error.setTitle(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+
+        return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
+    }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
