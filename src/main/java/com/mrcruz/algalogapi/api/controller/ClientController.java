@@ -1,23 +1,54 @@
 package com.mrcruz.algalogapi.api.controller;
 
 import com.mrcruz.algalogapi.domain.model.Client;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.mrcruz.algalogapi.domain.repository.ClientRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 import java.util.List;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/clients")
 public class ClientController {
 
-    @PersistenceContext
-    private EntityManager manager;
+    private ClientRepository clientRepository;
 
     @GetMapping
     public List<Client> listAll(){
-        return manager.createQuery("from Client", Client.class).getResultList();
+        return clientRepository.findAll();
     }
+
+    @GetMapping("/{id}")
+    public Client findClient(@PathVariable Long id){
+        return clientRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Client not found"));
+    }
+
+    @PostMapping
+    public Client createClient(@Valid @RequestBody Client client){
+        return clientRepository.save(client);
+    }
+
+    @PutMapping("/{id}")
+    public Client updateClient(@PathVariable Long id, @Valid @RequestBody Client client){
+        if(!clientRepository.existsById(id)){
+            throw new EntityNotFoundException("Client not found");
+        }
+        client.setId(id);
+        return clientRepository.save(client);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClient(@PathVariable Long id){
+        if(!clientRepository.existsById(id)){
+            throw new EntityNotFoundException("Client not found");
+        }
+        clientRepository.deleteById(id);
+    }
+
 }
